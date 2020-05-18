@@ -33,7 +33,6 @@ export class TextService {
   }
 
   formatHtml(text:string, uppercase:boolean):string{
-    console.log('formatting text ' + text);
     const textUC = text.toUpperCase();
 
     let i = 0;

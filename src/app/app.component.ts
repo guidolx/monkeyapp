@@ -26,8 +26,6 @@ export class AppComponent implements AfterViewInit {
   }
 
   onSubmit() {
-    console.log(this.lectureForm);
-    console.log(this.lectureForm.form.value);
     const text = this.lectureForm.form.value.text2format;
     const uc: boolean = this.lectureForm.form.value.majuscule;
     this.texts.push({ 'text': text, 'uc': uc, html: this.textService.formatHtml(text, uc) });
@@ -35,13 +33,11 @@ export class AppComponent implements AfterViewInit {
   }
 
   onReset() {
-    console.log('onReset');
     this.texts = this.texts.splice(0, 0);
     console.log(this.texts);
   }
 
   onPdf() {
-    console.log('Guido')
     this.textService.formatPdf(this.texts);
   }
 
