@@ -7,9 +7,10 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  
 
   <head>
-    <!-- Adding comment for gh pages -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.1/cropper.min.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <style>
       * {
@@ -32,60 +33,160 @@
         font-size: 3em;
       }
 
+      .muette{
+        color:#E6E8EA;
+        font-size:3em;
+      }
+
+      .ws {
+        font-size: 3em;
+      }
+
+      .digramme-dark {
+        color: #27AB83;
+        font-size: 1.2em;
+      }
+
+      .consonne-dark {
+        color:#262B34;
+        font-size: 1.2em
+      }
+
+      .voyelle-dark {
+        color:#262B34;
+        font-size: 1.2em;
+      }
+
+      .muette-dark{
+        color:#CCCED0;
+        font-size:1.2em;
+      }
+
+      .ws-dark {
+        color:#262B34;
+        font-size: 1.2em;
+      }
+
       .para {
         margin-top: 1rem;
         letter-spacing: 0.2em;
       }
 
+      .header-link{
+        color:#36A686!important;
+        font-size: xx-large;
+        cursor: pointer;
+      }
+
+      .header-link-active{
+        color:#F6F8FB!important;
+        font-size: xx-large;
+        cursor: pointer;
+      }
+
+      .page-preview{
+        border-color: #1992D4;
+        border-style: solid;
+        border-width: 1px;
+        min-width: 420px;
+        min-height: 595px;
+        box-shadow: rgba(44,44,44,0.05) -2px -2px 6px 2px;
+        padding-top: 88px;
+        padding-left:20px;
+        padding-right:20px;
+      }
 
       
-
       .header {
-          padding: 0.6em 1em;
-          min-height: 3rem;
-          width: 100%;
-          background-color: #65D6AD;
-        }
+        padding: 0.6em 1em;
+        min-height: 3rem;
+        width: 100%;
+        background-color: #65D6AD;
+      }
 
-        .title {
-          font-size: 2rem;
-          line-height: 2.3rem;
-          color: #F6F8FB;
-          margin-bottom: 0px !important;
-          text-align:center;
-          margin-top:0.5rem;
-        }
+      .title {
+        font-size: 2rem;
+        line-height: 2.3rem;
+        color: #F6F8FB;
+        margin-bottom: 0px !important;
+        text-align: center;
+        margin-top: 0.5rem;
+      }
 
-        .slug{
-          display:none;
-          
-        }
+      .image-file-input{
+        border:0;
+        clip: rect(0,0,0,0);
+        height: 1px;
+        overflow: hidden;
+        padding: 0;
+        position:absolute;
+        white-space: nowrap;
+        width: 1px;
+      }
 
-        input#text2format::placeholder {
-          color: #cdd7e6 !important;
-        }
+      .img-container{
+        width: 400px;
+        height: 380px;
+        text-align: center;
+      }
 
-        label {
-          margin-bottom: 0px !important;
-        }
+      .img-source{
+        width:400px;
+        height: 320px;
+        max-width: 100%;
+        display: block;
+      }
 
-        .monkey{
-          background:url(assets/img/fms_c.svg);
-          background-repeat: no-repeat;
-          background-position: center;
-          background-size: 25px 22px;
-          height: 2.5rem;
-        }
+      .paragraph-section{
+        display: flex;
+        height: 102px;
+        align-items: flex-end;
+      }
 
-        .monkey:hover{
-          background:url(assets/img/fms_o.svg);
-          background-repeat: no-repeat;
-          background-position: center;
-          background-size: 25px 22px;
-          height: 2.5rem;
-        }
+      .paragraph-box{
+        margin-left:12px;
+        margin-right:12px;
+        width: 356px;
+        min-height: 18px;
+        font-size: 18px;
+        line-height: 26px;
+        margin-bottom: 10px;
+      }
 
+      .img-preview{
+        width:380px;
+        height: 284x;
+        display: block;
+      }
 
+      .slug {
+        display: none;
+
+      }
+
+      input#text2format::placeholder {
+        color: #cdd7e6 !important;
+      }
+
+      label {
+        margin-bottom: 0px !important;
+      }
+
+      .monkey {
+        background: url(assets/img/fms_c.svg);
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 25px 22px;
+        height: 2.5rem;
+      }
+
+      .monkey:hover {
+        background: url(assets/img/fms_o.svg);
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 25px 22px;
+        height: 2.5rem;
+      }
 
       /* Small devices (landscape phones, 576px and up) */
       @media (min-width: 576px) {
@@ -111,17 +212,15 @@
         label {
           margin-bottom: 0px !important;
         }
-        .slug{
-          display:inherit;
-          text-align:left;
-          margin-right:2rem;
+
+        .slug {
+          display: inherit;
+          text-align: left;
+          margin-right: 2rem;
         }
 
 
       }
-
-
-
     </style>
   </head>
 

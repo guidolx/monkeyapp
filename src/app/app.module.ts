@@ -5,11 +5,18 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ColorTextComponent } from './color-text/color-text.component';
+import { CardComponent } from './card/card.component';
+import { StoryComponent } from './story/story.component';
+import { HeaderComponent } from './header/header.component';
+
 
 @NgModule({
   declarations: [
     AppComponent,
-    ColorTextComponent
+    ColorTextComponent,
+    CardComponent,
+    StoryComponent,
+    HeaderComponent
   ],
   imports: [
     BrowserModule,

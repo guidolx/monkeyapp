@@ -1,0 +1,22 @@
+<header class='header'>
+    <div class='container'>
+      <div class='row align-items-center'>
+        <div class="col-xs-12 col-md-6">
+          <nav class="navbar navbar-expand-md navbar-light">
+            <a class="navbar-brand" href="#">
+                <img src="assets/img/fms_c.svg" width="41px" height="37px" class='d-inline-block align-top'>
+            </a>
+            <div class="collapse navbar-collapse">
+              <div class="navbar-nav">
+                <a class="nav-item nav-link header-link" (click)='goHome()' [ngClass]="{'header-link-active':currentPage === 'fiches','header-link':currentPage !== 'fiches' }">Fiches <span class="sr-only">(current)</span></a>
+                <a class="nav-item nav-link header-link" (click)='goStory()' [ngClass]="{'header-link-active':currentPage === 'livrets','header-link':currentPage !== 'livrets' }">Livrets</a>
+              </div>
+            </div>
+          </nav>
+        </div>
+        
+      </div>
+    </div>
+  </header>
+
+  

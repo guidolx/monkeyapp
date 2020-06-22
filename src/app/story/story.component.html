@@ -1,0 +1,75 @@
+<div style='margin: 1.5rem 2rem;'>
+    <div class="container">
+        <div class="row">
+            <!-- Page Editor -->
+            <div class="col-md-6 col-xs-12">
+                <div class="container-fluid">
+                    <form (ngSubmit)='onSubmit()' #p='ngForm'>
+                        <div class="form-row">
+                            <div class="form-group col-12">
+                                <div class="btn-toolbar justify-content-between" role="toolbar">
+                                    <div class="btn-group">
+                                        <button class="btn btn-secondary" type='button' [disabled]='prevPageFlag == false' (click)="onPreviousPage()">&lt;</button>
+                                    </div>
+                                    <div class="btn-group">
+                                        <div class="btn btn-primary" (click)='onCreatePdf()'>
+                                            Pdf
+                                        </div>
+                                        <div class="btn btn-outline-primary">
+                                            Enregistrer
+                                        </div>
+                                        
+                                    </div>
+                                    <div class="btn-group"><button class="btn btn-secondary" type='button' [disabled]='nextPageFlag == false' (click)='onNextPage()'>&gt;</button></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-12">
+                                <label for='para2format'>Saisissez le texte de la page {{currentPageNumber}}:</label>
+                                <textarea autocomplete='off' type="text" class="form-control" rows="3" id="para2format"
+                                    name='para2format' placeholder="Ne pas écrire plus de 10-15 mots par page." #para2format ngModel
+                                    (ngModelChange)="onUpdateText($event)"
+                                    required autofocus>
+                                </textarea>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-12">
+                                <div class="btn-toolbar justify-content-between" role="toolbar">
+                                    <div class="btn-group">
+                                        <div class="btn-group">
+                                            <label class="btn btn-outline-secondary">
+                                                Sél. image...
+                                                <input type='file' accept="image/*" class="image-file-input" (change)='onOpenFile($event)'>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="btn-group"><button class="btn btn-outline-danger" [disabled]='imageSource == undefined' (click)='onDeleteImage()' type='button'>X</button></div>
+            
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="img-container" [hidden]='imageSource == undefined'>
+                                <img #image [src]="imageSource" width="380px" class="img-source img-fluid" (load)='onLoadImage()'>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="page-preview">
+                    <section class="paragraph-section">
+                        <p class="paragraph-box" [innerHTML]='htmlParagraph'></p>
+                    </section>
+                    <img [src]='imageDestination' class="img-preview" [hidden]='imageSource == undefined'>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <!-- Page Navigator comes here -->
+            
+        </div>
+    </div>
+</div>
