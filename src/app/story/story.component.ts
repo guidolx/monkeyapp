@@ -1,10 +1,10 @@
 import { Component, OnInit, ViewChild, ElementRef, Input, AfterViewInit } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import Cropper from 'cropperjs';
-import { TextService } from '../services/text.service';
 import { BookService } from '../services/book.service';
 import { Page } from '../model/page';
 import { Book } from '../model/book';
+import { LayoutService } from '../services/layout.service';
 
 @Component({
   selector: 'app-story',
@@ -37,13 +37,12 @@ export class StoryComponent implements OnInit, AfterViewInit {
 
 
 
-  constructor(private textService:TextService, private bookService:BookService) { }
+  constructor(private layoutService:LayoutService, private bookService:BookService) { }
 
   ngOnInit() {
     console.log("ngOnInit");
     this.page = this.bookService.getCurrentPage();
     this.updatePageNavigation();
-    
   }
 
   
@@ -77,8 +76,12 @@ export class StoryComponent implements OnInit, AfterViewInit {
     }
   }
 
+  onBooklet(){
+    this.layoutService.booklet(this.bookService.getBook());
+  }
+
   onCreatePdf():void{
-    this.textService.formatBook(this.bookService.getBook());
+    this.layoutService.formatBook(this.bookService.getBook());
   }
 
   onLoadImage():void{
@@ -89,7 +92,7 @@ export class StoryComponent implements OnInit, AfterViewInit {
 
   onUpdateText(text:string):void{
     if(text != undefined){
-      this.htmlParagraph = this.textService.formatHtml(text,true,TextService.letterTypeDarkCss);
+      this.htmlParagraph = this.layoutService.layoutHtml(text,true,LayoutService.letterTypeDarkCss);
     }else{
       this.htmlParagraph = '';
     }
@@ -111,9 +114,9 @@ export class StoryComponent implements OnInit, AfterViewInit {
     this.updateCurrentPageData();
     this.diagnostic();
   }
+
   diagnostic() {
     const book:Book = this.bookService.getBook();
-    
   }
 
   onPreviousPage():void{
@@ -142,7 +145,6 @@ export class StoryComponent implements OnInit, AfterViewInit {
     this.imageSource = undefined;
     this.imageSource = this.page.image;
   }
-
   
   private createCropper() {
     this.cropper = new Cropper(this.imageElement.nativeElement, {
@@ -160,9 +162,12 @@ export class StoryComponent implements OnInit, AfterViewInit {
       minCropBoxHeight: 284,
       minCropBoxWidth: 380,
       crop: () => {
-        const canvas = this.cropper.getCroppedCanvas();
+        const canvas = this.cropper.getCroppedCanvas({width:this.layoutService.MAX_IMAGE_WIDTH,height:294});
         this.imageDestination = canvas.toDataURL("image/png");
         this.page.croppedImage = this.imageDestination;
+        this.page.crop = this.cropper.getCropBoxData();
+        this.page.canvas = this.cropper.getCanvasData();
+        this.page.image = this.imageSource as string;
       },
       ready: () => {
         if(this.page.canvas != undefined){
@@ -172,8 +177,7 @@ export class StoryComponent implements OnInit, AfterViewInit {
           this.cropper.setCropBoxData(this.page.crop);
         }
       }
-    });
-    
+    }); 
   }
 
   private destroyCropper() {
@@ -181,7 +185,5 @@ export class StoryComponent implements OnInit, AfterViewInit {
       this.cropper.destroy();
     }
   }
-
-
 
 }

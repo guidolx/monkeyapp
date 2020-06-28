@@ -28,7 +28,7 @@
               "src/styles/bootstrap.min.css",
               "src/styles/reading.css"
             ],
-            "scripts": []
+            "scripts": ["js/pdfkit.standalone.js","js/blob-stream.js","js/fonts.js"]
           },
           "configurations": {
             "production": {

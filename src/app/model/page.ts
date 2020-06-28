@@ -3,6 +3,7 @@ export interface Page{
     image:string;
     croppedImage:string;
     text:string;
-    canvas:Object;
-    crop:Object;
+    canvas:{left:number,top:number,width:number,height:number,naturalWidth:number,naturalHeight:number};
+    crop:{height:number,width:number,top:number,left:number};
+    blankPage?:boolean;
 }

@@ -7,10 +7,11 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  
+
 
   <head>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.1/cropper.min.css" rel="stylesheet" type="text/css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.1/cropper.min.css" rel="stylesheet"
+      type="text/css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <style>
       * {
@@ -33,9 +34,9 @@
         font-size: 3em;
       }
 
-      .muette{
-        color:#E6E8EA;
-        font-size:3em;
+      .muette {
+        color: #E6E8EA;
+        font-size: 3em;
       }
 
       .ws {
@@ -48,22 +49,22 @@
       }
 
       .consonne-dark {
-        color:#262B34;
+        color: #262B34;
         font-size: 1.2em
       }
 
       .voyelle-dark {
-        color:#262B34;
+        color: #262B34;
         font-size: 1.2em;
       }
 
-      .muette-dark{
-        color:#CCCED0;
-        font-size:1.2em;
+      .muette-dark {
+        color: #CCCED0;
+        font-size: 1.2em;
       }
 
       .ws-dark {
-        color:#262B34;
+        color: #262B34;
         font-size: 1.2em;
       }
 
@@ -72,31 +73,61 @@
         letter-spacing: 0.2em;
       }
 
-      .header-link{
-        color:#36A686!important;
+      .header-link {
+        color: #36A686 !important;
         font-size: xx-large;
         cursor: pointer;
       }
 
-      .header-link-active{
-        color:#F6F8FB!important;
+      .header-link-active {
+        color: #F6F8FB !important;
         font-size: xx-large;
         cursor: pointer;
       }
 
-      .page-preview{
-        border-color: #1992D4;
-        border-style: solid;
-        border-width: 1px;
-        min-width: 420px;
-        min-height: 595px;
-        box-shadow: rgba(44,44,44,0.05) -2px -2px 6px 2px;
-        padding-top: 88px;
-        padding-left:20px;
-        padding-right:20px;
+      @media (min-width: 992px) {
+        .page-preview {
+          border-color: rgb(152, 160, 165);
+          border-style: solid;
+          border-width: 1px;
+          min-width: 420px;
+          min-height: 595px;
+          max-height: 595px;
+          max-width: 420px;
+          box-shadow: rgba(44, 44, 44, 0.05) -2px -2px 6px 2px;
+          padding-top: 88px;
+          padding-left: 20px;
+          padding-right: 20px;
+          margin-left: auto;
+        }
+
+        .paragraph-preview {
+          margin-left: 12px;
+          margin-right: 12px;
+          width: 340px;
+          min-height: 18px;
+          font-size: 18px;
+          line-height: 26px;
+          margin-bottom: 10px;
+        }
+
+        .img-preview {
+          width: 340px;
+          display: block;
+          margin-right: auto;
+          margin-left:auto;
+        }
+
       }
 
-      
+      @media (max-width: 991px) {
+        .page-preview {
+          display: none;
+        }
+      }
+
+
+
       .header {
         padding: 0.6em 1em;
         min-height: 3rem;
@@ -113,51 +144,37 @@
         margin-top: 0.5rem;
       }
 
-      .image-file-input{
-        border:0;
-        clip: rect(0,0,0,0);
+      .image-file-input {
+        border: 0;
+        clip: rect(0, 0, 0, 0);
         height: 1px;
         overflow: hidden;
         padding: 0;
-        position:absolute;
+        position: absolute;
         white-space: nowrap;
         width: 1px;
       }
 
-      .img-container{
+      .img-container {
         width: 400px;
         height: 380px;
         text-align: center;
       }
 
-      .img-source{
-        width:400px;
+      .img-source {
+        width: 400px;
         height: 320px;
         max-width: 100%;
         display: block;
       }
 
-      .paragraph-section{
+      .paragraph-section {
         display: flex;
         height: 102px;
         align-items: flex-end;
       }
 
-      .paragraph-box{
-        margin-left:12px;
-        margin-right:12px;
-        width: 356px;
-        min-height: 18px;
-        font-size: 18px;
-        line-height: 26px;
-        margin-bottom: 10px;
-      }
 
-      .img-preview{
-        width:380px;
-        height: 284x;
-        display: block;
-      }
 
       .slug {
         display: none;

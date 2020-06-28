@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { TextService } from '../services/text.service';
+import { LayoutService } from '../services/layout.service';
 
 @Component({
   selector: 'app-card',
@@ -16,7 +17,7 @@ export class CardComponent implements AfterViewInit {
   texts = new Array<{ text: string, uc: boolean, html: string }>();
   state: boolean = true;
 
-  constructor(protected textService: TextService) {
+  constructor(private layoutService: LayoutService, private textService:TextService) {
 
   }
 
@@ -27,7 +28,7 @@ export class CardComponent implements AfterViewInit {
   onSubmit() {
     const text = this.lectureForm.form.value.text2format;
     const uc: boolean = this.lectureForm.form.value.majuscule;
-    this.texts.push({ 'text': text, 'uc': uc, html: this.textService.formatHtml(text, uc,TextService.letterTypeColorCss) });
+    this.texts.push({ 'text': text, 'uc': uc, html: this.layoutService.layoutHtml(text, uc,LayoutService.letterTypeColorCss) });
     this.lectureForm.form.setValue({ 'text2format': '', majuscule: this.state });
   }
 
@@ -37,7 +38,7 @@ export class CardComponent implements AfterViewInit {
   }
 
   onPdf() {
-    this.textService.formatPdf(this.texts);
+    this.layoutService.layoutWordsPdf(this.texts);
   }
 
   onRandomWords() {
@@ -45,7 +46,7 @@ export class CardComponent implements AfterViewInit {
     this.texts = this.texts.splice(0,0);
     const a: Array<string> = this.textService.getRandomWords();
     const uc: boolean = this.lectureForm.form.value.majuscule;
-    a.forEach(text => this.texts.push({ 'text': text, 'uc': uc, html: this.textService.formatHtml(text, uc,TextService.letterTypeColorCss) }));
+    a.forEach(text => this.texts.push({ 'text': text, 'uc': uc, html: this.layoutService.layoutHtml(text, uc,LayoutService.letterTypeColorCss) }));
   }
 
 }

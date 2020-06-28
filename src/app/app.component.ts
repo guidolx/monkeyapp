@@ -1,4 +1,5 @@
 import { Component,ViewEncapsulation } from '@angular/core';
+import { LayoutService } from './services/layout.service';
 
 @Component({
   selector: 'app-root',
@@ -10,7 +11,7 @@ export class AppComponent  {
 
   
   constructor() {
-
+    LayoutService.initFonts();
   }
 
   

@@ -15,7 +15,7 @@
                                         <div class="btn btn-primary" (click)='onCreatePdf()'>
                                             Pdf
                                         </div>
-                                        <div class="btn btn-outline-primary">
+                                        <div class="btn btn-outline-primary" (click)='onBooklet()'>
                                             Enregistrer
                                         </div>
                                         
@@ -61,7 +61,7 @@
             <div class="col-md-6">
                 <div class="page-preview">
                     <section class="paragraph-section">
-                        <p class="paragraph-box" [innerHTML]='htmlParagraph'></p>
+                        <p class="paragraph-preview" [innerHTML]='htmlParagraph'></p>
                     </section>
                     <img [src]='imageDestination' class="img-preview" [hidden]='imageSource == undefined'>
                 </div>
