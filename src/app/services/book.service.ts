@@ -6,6 +6,22 @@ import { Page } from '../model/page';
   providedIn: 'root'
 })
 export class BookService {
+  
+  parseBook(bookString: string) {
+    if(bookString == undefined){
+      return false;
+    }
+    let b:Book = BookService.createDefaultBook();
+    let s = JSON.parse(bookString);
+    Object.assign(b,s);
+    console.log(b);
+    BookService.book = b;
+    return true;
+  }
+  
+  getBookAsJson(): string {
+    return JSON.stringify(this.getBook());
+  }
 
   static book:Book = BookService.createDefaultBook();
 

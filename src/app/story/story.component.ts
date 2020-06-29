@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, Input, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, Input, AfterViewInit, HostListener } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import Cropper from 'cropperjs';
 import { BookService } from '../services/book.service';
@@ -19,25 +19,31 @@ export class StoryComponent implements OnInit, AfterViewInit {
   @ViewChild("image", { static: false })
   public imageElement: ElementRef;
 
+  @ViewChild("para2format", { static: false })
+  public inputElement: ElementRef;
+
+
   public imageSource: string | ArrayBuffer;
 
   public imageDestination: string;
 
-  public nextPageFlag:boolean;
+  public nextPageFlag: boolean;
 
-  public prevPageFlag:boolean;
+  public prevPageFlag: boolean;
 
-  public currentPageNumber:number;
+  public currentPageNumber: number;
 
   private cropper: Cropper;
 
-  public htmlParagraph:string;
+  public htmlParagraph: string;
 
-  private page:Page;
+  private page: Page;
+
+  public numCharsLeft: number = 120;
 
 
 
-  constructor(private layoutService:LayoutService, private bookService:BookService) { }
+  constructor(private layoutService: LayoutService, private bookService: BookService) { }
 
   ngOnInit() {
     console.log("ngOnInit");
@@ -45,29 +51,80 @@ export class StoryComponent implements OnInit, AfterViewInit {
     this.updatePageNavigation();
   }
 
-  
   ngAfterViewInit(): void {
     setTimeout(() => {
-    this.updateCurrentPageData();
+      this.updateCurrentPageData();
     });
   }
 
-  onOpenFile($event: any, maxWidth:number = 800, maxHeight:number = 800): void {
+  @HostListener('window:keyup', ['$event'])
+  keyEvent(event: KeyboardEvent): void {
+    if (event.key == undefined) {
+      return;
+    }
+
+    switch (event.keyCode) {
+      case 37:
+        if (this.prevPageFlag) {
+          this.onPreviousPage();
+        }
+        break;
+      case 39:
+        if (this.nextPageFlag) {
+          this.onNextPage();
+        }
+        break;
+    }
+
+  }
+
+  onSaveStoryJson(): void {
+    let dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(this.bookService.getBookAsJson());
+    //let name = this.bookService.getBook().title + getFormattedTime();
+    let name = this.getFormattedTime();
+    let a = document.getElementById('export-file');
+    a.setAttribute("href", dataUri);
+    a.setAttribute("download", `${name}.json`);
+    a.click();
+  }
+
+  onLoadStoryJson(): void {
+    document.getElementById('import-file').click();
+  }
+
+  parseLocalFile() {
+    console.log("ParseLocalFile");
+    let fileElement = <HTMLInputElement>document.getElementById('import-file');
+    let files = fileElement.files;
+    let f = files[0];
+    let reader = new FileReader();
+    reader.onload = (f) => {
+      console.log("Parsing book");
+      if (this.bookService.parseBook(reader.result as string)) {
+        console.log('Opening page');
+        this.openCurrentPage();
+      }
+    };
+
+    reader.readAsText(f);
+  }
+
+  onOpenFile($event: any, maxWidth: number = 800, maxHeight: number = 800): void {
     if ($event.target.files && $event.target.files[0]) {
       const reader: FileReader = new FileReader();
       let img = new Image();
       reader.onload = (e) => {
         img.src = reader.result as string;
         img.onload = (e) => {
-          if(img.width > maxWidth || img.height > maxHeight){
+          if (img.width > maxWidth || img.height > maxHeight) {
             let factor = img.width > img.height ? img.width / maxWidth : img.height / maxHeight;
             let canvas = document.createElement('canvas');
             let context = canvas.getContext('2d');
             canvas.width = img.width / factor;
             canvas.height = img.height / factor;
-            context.drawImage(img, 0,0,canvas.width,canvas.height);
+            context.drawImage(img, 0, 0, canvas.width, canvas.height);
             this.imageSource = canvas.toDataURL("image/png");
-          }else{
+          } else {
             this.imageSource = img.src;
           }
         }
@@ -76,54 +133,54 @@ export class StoryComponent implements OnInit, AfterViewInit {
     }
   }
 
-  onBooklet(){
+  onBooklet() {
     this.layoutService.booklet(this.bookService.getBook());
   }
 
-  onCreatePdf():void{
+  onCreatePdf(): void {
     this.layoutService.formatBook(this.bookService.getBook());
   }
 
-  onLoadImage():void{
+  onLoadImage(): void {
     console.log("onload image");
     this.destroyCropper();
-    this.createCropper();         
+    this.createCropper();
   }
 
-  onUpdateText(text:string):void{
-    if(text != undefined){
-      this.htmlParagraph = this.layoutService.layoutHtml(text,true,LayoutService.letterTypeDarkCss);
-    }else{
+  onUpdateText(text: string): void {
+    if (text != undefined) {
+      this.htmlParagraph = this.layoutService.layoutHtml(text, true, LayoutService.letterTypeDarkCss);
+
+    } else {
       this.htmlParagraph = '';
     }
     this.page.text = text;
+    this.numCharsLeft = text != undefined ? 120 - text.length : 120;
   }
 
-  onDeleteImage():void{
+  onDeleteImage(): void {
     this.destroyCropper();
     this.imageSource = undefined;
     this.page.croppedImage = undefined;
     this.page.image = undefined;
   }
 
-  
-  onNextPage():void{
+
+  onNextPage(): void {
     this.saveCurrentPageData();
     this.page = this.bookService.nextPage();
     this.updatePageNavigation();
     this.updateCurrentPageData();
-    this.diagnostic();
+    this.focusTextarea();
   }
 
-  diagnostic() {
-    const book:Book = this.bookService.getBook();
-  }
 
-  onPreviousPage():void{
+  onPreviousPage(): void {
     this.saveCurrentPageData();
     this.page = this.bookService.previousPage();
     this.updatePageNavigation();
     this.updateCurrentPageData();
+    this.focusTextarea();
   }
 
   private updatePageNavigation() {
@@ -132,20 +189,20 @@ export class StoryComponent implements OnInit, AfterViewInit {
     this.prevPageFlag = this.bookService.hasPreviousPage();
   }
 
-  private saveCurrentPageData():void{
+  private saveCurrentPageData(): void {
     this.page.text = this.pageForm.form.controls.para2format.value;
     this.page.image = this.imageSource as string;
-    this.page.canvas = this.cropper && this.cropper.getCanvasData() != undefined ? this.cropper.getCanvasData():undefined;
+    this.page.canvas = this.cropper && this.cropper.getCanvasData() != undefined ? this.cropper.getCanvasData() : undefined;
     this.page.crop = this.cropper && this.cropper.getCropBoxData() != undefined ? this.cropper.getCropBoxData() : undefined;
-    
+
   }
 
-  private updateCurrentPageData():void{
+  private updateCurrentPageData(): void {
     this.pageForm.form.controls["para2format"].setValue(this.page.text);
     this.imageSource = undefined;
     this.imageSource = this.page.image;
   }
-  
+
   private createCropper() {
     this.cropper = new Cropper(this.imageElement.nativeElement, {
       zoomable: true,
@@ -162,7 +219,7 @@ export class StoryComponent implements OnInit, AfterViewInit {
       minCropBoxHeight: 284,
       minCropBoxWidth: 380,
       crop: () => {
-        const canvas = this.cropper.getCroppedCanvas({width:this.layoutService.MAX_IMAGE_WIDTH,height:294});
+        const canvas = this.cropper.getCroppedCanvas({ width: this.layoutService.MAX_IMAGE_WIDTH, height: 294 });
         this.imageDestination = canvas.toDataURL("image/png");
         this.page.croppedImage = this.imageDestination;
         this.page.crop = this.cropper.getCropBoxData();
@@ -170,14 +227,14 @@ export class StoryComponent implements OnInit, AfterViewInit {
         this.page.image = this.imageSource as string;
       },
       ready: () => {
-        if(this.page.canvas != undefined){
+        if (this.page.canvas != undefined) {
           this.cropper.setCanvasData(this.page.canvas);
         }
-        if(this.page.crop != undefined){
+        if (this.page.crop != undefined) {
           this.cropper.setCropBoxData(this.page.crop);
         }
       }
-    }); 
+    });
   }
 
   private destroyCropper() {
@@ -185,5 +242,29 @@ export class StoryComponent implements OnInit, AfterViewInit {
       this.cropper.destroy();
     }
   }
+
+  private openCurrentPage() {
+    this.page = this.bookService.getCurrentPage();
+    this.updatePageNavigation();
+    this.updateCurrentPageData();
+  }
+
+  private getFormattedTime(): string {
+    let today = new Date();
+    let y = today.getFullYear();
+    // JavaScript months are 0-based.
+    let m = today.getMonth() + 1;
+    let d = today.getDate();
+    let h = today.getHours();
+    let mi = today.getMinutes();
+    let s = today.getSeconds();
+    return y + "-" + m + "-" + d + "-" + h + "-" + mi + "-" + s;
+  }
+
+  private focusTextarea() {
+    this.inputElement.nativeElement.focus();
+  }
+
+
 
 }

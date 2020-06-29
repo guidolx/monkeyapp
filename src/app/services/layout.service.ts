@@ -70,11 +70,11 @@ export class LayoutService {
     this.registerFonts(doc);
     const stream = doc.pipe(blobStream());
 
-    doc.font('Nunito-Bold',18);
+    doc.font('Nunito-Bold',14);
 
-    let pageA5_left = { t_x: 40, t_y: 100, i_x: 40, i_y: 120 };
+    let pageA5_left = { t_x: 40, t_y: 130, i_x: 40, i_y: 150 };
 
-    let pageA5_right = { t_x: 460, t_y: 100, i_x: 460, i_y: 120 };
+    let pageA5_right = { t_x: 460, t_y: 130, i_x: 460, i_y: 150 };
     let flip = false;
 
     for (let pageIndex = 0; pageIndex < (pages.length / 2); pageIndex++) {
@@ -84,12 +84,9 @@ export class LayoutService {
       let pageAPos = flip ? pageA5_right : pageA5_left;
       let pageBPos = flip ? pageA5_left : pageA5_right;
       flip = !flip;
-      console.log(`Page A ${pageA}`);
-      console.log(`Page B ${pageB}`);
       this.layoutPage(doc, pageA, pageAPos, pageANumber + 1);
       this.layoutPage(doc, pageB, pageBPos, pageIndex + 1);
       if (pageIndex + 1 < (pages.length) / 2) {
-        console.log("Adding page");
         doc.addPage();
       }
     }
@@ -363,16 +360,31 @@ export class LayoutService {
     }
     let content = undefined;
     if (page.text != undefined) {
-      let ht = doc.heightOfString(page.text.toUpperCase(), { width: this.MAX_LAYOUT_WIDTH });
-      console.log(`Height of text: ${ht} number of characters ${page.text.length}`);
+      let ht = doc.heightOfString(page.text.toUpperCase(), { width: this.MAX_LAYOUT_WIDTH, characterSpacing: 1.3 });
+      let wt = doc.widthOfString(page.text.toUpperCase(),{ width: this.MAX_LAYOUT_WIDTH, characterSpacing: 1.3});
+      let lineWrap = Array<number>();
+      if(wt > this.MAX_LAYOUT_WIDTH){
+        lineWrap = this.getLineWrapPositions(0, page.text.toUpperCase(),doc);
+      }
       content = this.layoutParagraphPdf({ text: page.text, uc: true, html: '' });
+      
       let i = 0;
-      doc.text('', pagePos.t_x, pagePos.t_y - ht, { continued: true, width: 300 });
+      doc.text('', pagePos.t_x, pagePos.t_y - ht, { continued: true, width: 300, characterSpacing: 1.3, lineBreak: true });
+      let charIndex = 0;
+      let cont = true;
+      let wrapIndex = lineWrap != undefined && lineWrap.length > 0 ? lineWrap.shift(): undefined;
       content.text.forEach((elt) => {
         let c = this.getColorForStyle(elt.style);
-        doc.fillColor(c).text(elt.text, { continued: ++i < content.text.length });
+        if(wrapIndex != undefined && wrapIndex == charIndex){
+          cont = false;
+          wrapIndex = lineWrap != undefined && lineWrap.length > 0 ? lineWrap.shift(): undefined;
+        }
+        doc.fillColor(c).text(elt.text, { continued: cont && ++i < content.text.length });
+        charIndex++;
+        cont = true;
       });
     }
+    
     if (page.croppedImage != undefined) {
       let data = page.croppedImage;
       let buffer = LayoutService.base64ToArrayBuffer(data.split(',')[1]);
@@ -384,8 +396,39 @@ export class LayoutService {
     let pageNumberWidth = doc.widthOfString(ps);
     console.log(ps);
     let x = Math.floor(pagePos.t_x + ((this.MAX_LAYOUT_WIDTH + pageNumberWidth) / 2));
-    doc.fillColor(this.getColorForStyle('ws')).text(ps, x, 530, { continued: false, lineBreak: false });
+    
+    doc.text('', { continued: false });
+    doc.fillColor(this.getColorForStyle('ws')).text(ps, x, 500,{continued: false});
 
+  }
+  getLineWrapPositions(index: number, text: string,doc:pdfkit):Array<number> {
+    let i = index;
+    let whiteSpace = [];
+    let lineWrapPositions = [];
+    while(++i < text.length ){
+      
+      if(text.charAt(i) == ' '){
+        whiteSpace.push(i);
+      }
+      let t = text.substring(index,i);
+      let w = doc.widthOfString(t,{ characterSpacing: 1.3});
+      if( w < this.MAX_LAYOUT_WIDTH - 50){
+        continue;
+      }
+      if(whiteSpace.length > 0){
+        let p = whiteSpace.pop();
+        lineWrapPositions.push(p);
+        whiteSpace = [];
+        index = p;
+      }else{
+        lineWrapPositions.push(i - 1);
+        index = i - 1;
+      }
+      
+    }
+
+    return lineWrapPositions;
+    
   }
 
 

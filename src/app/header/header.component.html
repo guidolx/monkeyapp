@@ -8,11 +8,22 @@
             </a>
             <div class="collapse navbar-collapse">
               <div class="navbar-nav">
-                <a class="nav-item nav-link header-link" (click)='goHome()' [ngClass]="{'header-link-active':currentPage === 'fiches','header-link':currentPage !== 'fiches' }">Fiches <span class="sr-only">(current)</span></a>
-                <a class="nav-item nav-link header-link" (click)='goStory()' [ngClass]="{'header-link-active':currentPage === 'livrets','header-link':currentPage !== 'livrets' }">Livrets</a>
+                <a class="nav-item nav-link header-link" (click)='goHome()' [ngClass]="{'header-link-active':currentPage === 'Fiches','header-link':currentPage !== 'Fiches' }">Fiches <span class="sr-only">(current)</span></a>
+                <a class="nav-item nav-link header-link" (click)='goStory()' [ngClass]="{'header-link-active':currentPage === 'Livrets','header-link':currentPage !== 'Livrets' }">Livrets</a>
+              </div>
+            </div>
+            <div class="dropdown d-md-none">
+              <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                {{currentPage}}
+              </button>
+              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+
+                <a class="dropdown-item" (click)='goHome()' [ngClass]="{'active text-white':currentPage === 'Fiches'}" style="cursor: pointer;" >Fiches</a>
+                <a class="dropdown-item" (click)='goStory()' [ngClass]="{'active text-white':currentPage === 'Livrets'}" style="cursor: pointer;">Livrets</a>
               </div>
             </div>
           </nav>
+          
         </div>
         
       </div>

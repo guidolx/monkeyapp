@@ -13,6 +13,8 @@ export class TextService {
 
   static muettes = 'STDPMX';
 
+  static whitespace = ' ';
+
   wordIndex: number = 0;
 
   constructor() {
@@ -55,7 +57,9 @@ export class TextService {
         result.a = result.a + "V";
       } else if (/\s/.test(currentChar) == false && (currentChar != currentChar.toLowerCase())) {
         result.a = result.a + 'C';
-      } else {
+      } else if(TextService.whitespace.indexOf(currentChar) > -1){
+        result.a = result.a + 'W';
+      }else{
         result.a = result.a + ' ';
       }
       charIndex++;

@@ -12,11 +12,14 @@
                                         <button class="btn btn-secondary" type='button' [disabled]='prevPageFlag == false' (click)="onPreviousPage()">&lt;</button>
                                     </div>
                                     <div class="btn-group">
-                                        <div class="btn btn-primary" (click)='onCreatePdf()'>
+                                        <div class="btn btn-primary" (click)='onBooklet()'>
                                             Pdf
                                         </div>
-                                        <div class="btn btn-outline-primary" (click)='onBooklet()'>
+                                        <div class="btn btn-outline-primary" (click)='onSaveStoryJson()'>
                                             Enregistrer
+                                        </div>
+                                        <div class="btn btn-outline-primary" (click)='onLoadStoryJson()'>
+                                            Ouvrir
                                         </div>
                                         
                                     </div>
@@ -26,10 +29,11 @@
                         </div>
                         <div class="form-row">
                             <div class="form-group col-12">
-                                <label for='para2format'>Saisissez le texte de la page {{currentPageNumber}}:</label>
+                                <label for='para2format'>Il vous reste {{numCharsLeft}} caractère(s) sur la page {{currentPageNumber}}:</label>
                                 <textarea autocomplete='off' type="text" class="form-control" rows="3" id="para2format"
                                     name='para2format' placeholder="Ne pas écrire plus de 10-15 mots par page." #para2format ngModel
                                     (ngModelChange)="onUpdateText($event)"
+                                    maxlength="120"
                                     required autofocus>
                                 </textarea>
                             </div>
@@ -69,6 +73,13 @@
         </div>
         <div class="row">
             <!-- Page Navigator comes here -->
+            <div class="d-none">
+                <a class="d-none" id='export-file'>download file</a>
+            </div>
+
+            <div class="d-none">
+                <input class="d-none" type='file' id='import-file' (change)='parseLocalFile()'>
+            </div>
             
         </div>
     </div>
