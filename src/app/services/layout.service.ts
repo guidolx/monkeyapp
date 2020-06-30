@@ -49,6 +49,8 @@ export class LayoutService {
 
     book.pages.forEach((p) => { if (p.text != undefined || p.croppedImage != null) { pages.push(p) } });
 
+    console.log(pages);
+
     if (pages.length == 0) {
       return;
     }
@@ -57,9 +59,7 @@ export class LayoutService {
     let sheets = Math.floor(pages.length / 4) + (remainder > 0 ? 1 : 0);
     let pageNumber = sheets * 4;
     let blankPages = remainder > 0 ? 4 - remainder : 0;
-
-    console.log(`Pages : ${pages.length} remainder ${remainder} sheets ${sheets} pageNumber ${pageNumber} blanks ${blankPages}`);
-
+    
     if (blankPages > 0) {
       for (let i = 0; i < blankPages; i++) {
         pages.push({ canvas: undefined, crop: undefined, croppedImage: undefined, image: undefined, num: 0, text: undefined, blankPage: true } as Page);
@@ -70,7 +70,7 @@ export class LayoutService {
     this.registerFonts(doc);
     const stream = doc.pipe(blobStream());
 
-    doc.font('Nunito-Bold',14);
+    doc.font('Nunito-Bold', 14);
 
     let pageA5_left = { t_x: 40, t_y: 130, i_x: 40, i_y: 150 };
 
@@ -103,9 +103,6 @@ export class LayoutService {
       doc.registerFont(font, LayoutService.fontCache[font]);
     }
   }
-
-
-
 
   layoutHtml(text: string, uppercase: boolean, letterType: any) {
     const textUC = text.toUpperCase();
@@ -163,7 +160,7 @@ export class LayoutService {
         c = "#27AB83";
         break;
       case "muette":
-        c = "#E6E8EA"
+        c = "#9B9B9B"
         break;
       case "voyelle":
       case "consonne":
@@ -211,57 +208,6 @@ export class LayoutService {
 
 
 
-
-
-  // THROW AWAY SECTION 
-  // =================================
-
-  private createA5BookletDefinition(): { content: any, styles: any } {
-    var docDefinition = {
-      // a string or { width: number, height: number }
-      pageSize: 'A5',
-
-      // [left, top, right, bottom] or [horizontal, vertical] or just a number for equal margins
-      pageMargins: [140, 60, 40, 60],
-      content: [
-      ],
-
-      styles: {
-        digramme: {
-          fontSize: 18,
-          bold: true,
-          color: '#27AB83'
-        },
-        consonne: {
-          fontSize: 18,
-          bold: true,
-          color: '#262B34'
-        },
-        voyelle: {
-          fontSize: 18,
-          bold: true,
-          color: '#262B34'
-        },
-        muette: {
-          fontSize: 18,
-          bold: true,
-          color: '#E6E8EA'
-        },
-        ws: {
-          fontSize: 18
-        },
-        para: {
-          lineHeight: 2,
-          margin: [10, 10]
-        }
-      },
-      defaultStyle: {
-        font: 'Nunito'
-      }
-    };
-    return docDefinition;
-  }
-
   private createCardDocDefinition(): { content: any, styles: any } {
     var docDefinition = {
       content: [{
@@ -291,7 +237,7 @@ export class LayoutService {
         muette: {
           fontSize: 30,
           bold: true,
-          color: '#E6E8EA'
+          color: '#909294'
         },
         ws: {
           fontSize: 30
@@ -308,51 +254,7 @@ export class LayoutService {
   }
 
 
-  formatBook(book: Book): void {
-    if (book == undefined) {
-      console.log('book undefined.');
-    }
-
-    const pages: Array<Page> = [];
-
-    book.pages.forEach((p) => { if (p.text != undefined || p.croppedImage != null) { pages.push(p) } });
-
-    if (pages.length == 0) {
-      return;
-    }
-
-
-
-    const dd = this.createA5BookletDefinition();
-
-    for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
-      let page = pages[pageIndex];
-      let content = undefined, img = page.croppedImage != undefined ? { 'image': page.croppedImage, fit: [380, 284], margin: [20, 10] } : undefined;
-      if (page.text != undefined) {
-        content = this.layoutParagraphPdf({ text: page.text, uc: true, html: '' });
-      }
-      if (pageIndex + 1 < pages.length) {
-        if (img != undefined) {
-          img['pageBreak'] = 'after';
-        } else {
-          content.text[content.text.length - 1]['pageBreak'] = 'after';
-        }
-      }
-
-      if (content != undefined) {
-        dd.content.push(content);
-      }
-      if (img != undefined) {
-        console.log('Cropped box image data --> ' + page.crop);
-        console.log('Canvas data --> ' + page.canvas);
-        dd.content.push(img);
-      }
-    }
-
-    console.log(JSON.stringify(dd));
-
-    pdfMake.createPdf(dd).open();
-  }
+  
 
   private layoutPage(doc: pdfkit, page: Page, pagePos: any, pageNumber: number = 1) {
     if (page.blankPage) {
@@ -361,74 +263,80 @@ export class LayoutService {
     let content = undefined;
     if (page.text != undefined) {
       let ht = doc.heightOfString(page.text.toUpperCase(), { width: this.MAX_LAYOUT_WIDTH, characterSpacing: 1.3 });
-      let wt = doc.widthOfString(page.text.toUpperCase(),{ width: this.MAX_LAYOUT_WIDTH, characterSpacing: 1.3});
+      let wt = doc.widthOfString(page.text.toUpperCase(), { width: this.MAX_LAYOUT_WIDTH, characterSpacing: 1.3 });
       let lineWrap = Array<number>();
-      if(wt > this.MAX_LAYOUT_WIDTH){
-        lineWrap = this.getLineWrapPositions(0, page.text.toUpperCase(),doc);
+      if (wt > this.MAX_LAYOUT_WIDTH) {
+        lineWrap = this.getLineWrapPositions(0, page.text.toUpperCase(), doc);
       }
       content = this.layoutParagraphPdf({ text: page.text, uc: true, html: '' });
-      
+
       let i = 0;
-      doc.text('', pagePos.t_x, pagePos.t_y - ht, { continued: true, width: 300, characterSpacing: 1.3, lineBreak: true });
+      doc.text('', pagePos.t_x, pagePos.t_y - ht, { continued: true, width: this.MAX_LAYOUT_WIDTH, characterSpacing: 1.3, lineBreak: true });
       let charIndex = 0;
       let cont = true;
-      let wrapIndex = lineWrap != undefined && lineWrap.length > 0 ? lineWrap.shift(): undefined;
+      let wrapIndex = lineWrap != undefined && lineWrap.length > 0 ? lineWrap.shift() : undefined;
       content.text.forEach((elt) => {
         let c = this.getColorForStyle(elt.style);
-        if(wrapIndex != undefined && wrapIndex == charIndex){
+        if (wrapIndex != undefined && wrapIndex == charIndex) {
           cont = false;
-          wrapIndex = lineWrap != undefined && lineWrap.length > 0 ? lineWrap.shift(): undefined;
+          wrapIndex = lineWrap != undefined && lineWrap.length > 0 ? lineWrap.shift() : undefined;
         }
         doc.fillColor(c).text(elt.text, { continued: cont && ++i < content.text.length });
         charIndex++;
         cont = true;
       });
     }
-    
+
     if (page.croppedImage != undefined) {
       let data = page.croppedImage;
       let buffer = LayoutService.base64ToArrayBuffer(data.split(',')[1]);
-      console.log(JSON.stringify(page.crop));
-      console.log(JSON.stringify(page.canvas));
-      doc.image(buffer, pagePos.i_x + ((this.MAX_IMAGE_WIDTH - page.crop.width) / 2), pagePos.i_y, { fit:[this.MAX_LAYOUT_WIDTH ,294],align:'center' });
+      let marginX = 0;
+      if(page.canvas && page.canvas.width && page.canvas.width < page.crop.width){
+        const totMargin = page.crop.width - page.canvas.width;
+        const leftMargin = Math.floor(totMargin/2);
+        const centerCropBox = Math.floor((leftMargin - (page.canvas.left - page.crop.left)));
+        marginX = Math.floor((this.MAX_IMAGE_WIDTH/page.crop.width) * centerCropBox);
+      }
+      doc.image(buffer, pagePos.i_x + marginX, pagePos.i_y);
+      
     }
     let ps = pageNumber.toString();
     let pageNumberWidth = doc.widthOfString(ps);
-    console.log(ps);
     let x = Math.floor(pagePos.t_x + ((this.MAX_LAYOUT_WIDTH + pageNumberWidth) / 2));
-    
+
     doc.text('', { continued: false });
-    doc.fillColor(this.getColorForStyle('ws')).text(ps, x, 500,{continued: false});
+    doc.fillColor(this.getColorForStyle('ws')).text(ps, x, 500, { continued: false });
+
 
   }
-  getLineWrapPositions(index: number, text: string,doc:pdfkit):Array<number> {
+  getLineWrapPositions(index: number, text: string, doc: pdfkit): Array<number> {
     let i = index;
     let whiteSpace = [];
     let lineWrapPositions = [];
-    while(++i < text.length ){
-      
-      if(text.charAt(i) == ' '){
+    while (++i < text.length) {
+
+      if (text.charAt(i) == ' ') {
         whiteSpace.push(i);
       }
-      let t = text.substring(index,i);
-      let w = doc.widthOfString(t,{ characterSpacing: 1.3});
-      if( w < this.MAX_LAYOUT_WIDTH - 50){
+      let t = text.substring(index, i);
+      let w = doc.widthOfString(t, { characterSpacing: 1.3 });
+      if (w < this.MAX_LAYOUT_WIDTH - 20) {
         continue;
       }
-      if(whiteSpace.length > 0){
+      if (whiteSpace.length > 0) {
         let p = whiteSpace.pop();
         lineWrapPositions.push(p);
         whiteSpace = [];
         index = p;
-      }else{
+      } else {
         lineWrapPositions.push(i - 1);
         index = i - 1;
       }
-      
+
     }
 
     return lineWrapPositions;
-    
+
   }
 
 

@@ -1,10 +1,11 @@
-import { Component, OnInit, ViewChild, ElementRef, Input, AfterViewInit, HostListener } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, Input, AfterViewInit, HostListener, SecurityContext } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import Cropper from 'cropperjs';
 import { BookService } from '../services/book.service';
 import { Page } from '../model/page';
 import { Book } from '../model/book';
 import { LayoutService } from '../services/layout.service';
+import { DomSanitizer} from '@angular/platform-browser';
 
 @Component({
   selector: 'app-story',
@@ -43,7 +44,7 @@ export class StoryComponent implements OnInit, AfterViewInit {
 
 
 
-  constructor(private layoutService: LayoutService, private bookService: BookService) { }
+  constructor(private layoutService: LayoutService, private bookService: BookService, private sanitizer:DomSanitizer) { }
 
   ngOnInit() {
     console.log("ngOnInit");
@@ -62,7 +63,6 @@ export class StoryComponent implements OnInit, AfterViewInit {
     if (event.key == undefined) {
       return;
     }
-
     switch (event.keyCode) {
       case 37:
         if (this.prevPageFlag) {
@@ -75,7 +75,6 @@ export class StoryComponent implements OnInit, AfterViewInit {
         }
         break;
     }
-
   }
 
   onSaveStoryJson(): void {
@@ -84,7 +83,7 @@ export class StoryComponent implements OnInit, AfterViewInit {
     let name = this.getFormattedTime();
     let a = document.getElementById('export-file');
     a.setAttribute("href", dataUri);
-    a.setAttribute("download", `${name}.json`);
+    a.setAttribute("download", `coco-${name}.json`);
     a.click();
   }
 
@@ -137,32 +136,33 @@ export class StoryComponent implements OnInit, AfterViewInit {
     this.layoutService.booklet(this.bookService.getBook());
   }
 
-  onCreatePdf(): void {
-    this.layoutService.formatBook(this.bookService.getBook());
-  }
-
+  
   onLoadImage(): void {
-    console.log("onload image");
     this.destroyCropper();
     this.createCropper();
   }
 
   onUpdateText(text: string): void {
+    text = this.filterText(text);
+      
     if (text != undefined) {
       this.htmlParagraph = this.layoutService.layoutHtml(text, true, LayoutService.letterTypeDarkCss);
 
     } else {
       this.htmlParagraph = '';
     }
-    this.page.text = text;
+    this.page.text = text != undefined && text.length > 0 ? text: undefined;
     this.numCharsLeft = text != undefined ? 120 - text.length : 120;
   }
 
+  
   onDeleteImage(): void {
     this.destroyCropper();
     this.imageSource = undefined;
     this.page.croppedImage = undefined;
     this.page.image = undefined;
+    this.page.crop = undefined;
+    this.page.canvas = undefined;
   }
 
 
@@ -190,11 +190,13 @@ export class StoryComponent implements OnInit, AfterViewInit {
   }
 
   private saveCurrentPageData(): void {
-    this.page.text = this.pageForm.form.controls.para2format.value;
+    const input = this.pageForm.form.controls.para2format;
+    this.page.text = input.value && input.value.length > 0 ? input.value : undefined ;
     this.page.image = this.imageSource as string;
-    this.page.canvas = this.cropper && this.cropper.getCanvasData() != undefined ? this.cropper.getCanvasData() : undefined;
-    this.page.crop = this.cropper && this.cropper.getCropBoxData() != undefined ? this.cropper.getCropBoxData() : undefined;
-
+    if (this.imageSource != undefined) {
+      this.page.canvas = this.cropper && this.cropper.getCanvasData() != undefined ? this.cropper.getCanvasData() : undefined;
+      this.page.crop = this.cropper && this.cropper.getCropBoxData() != undefined ? this.cropper.getCropBoxData() : undefined;
+    }
   }
 
   private updateCurrentPageData(): void {
@@ -209,7 +211,7 @@ export class StoryComponent implements OnInit, AfterViewInit {
       scalable: false,
       center: true,
       responsive: true,
-      autoCrop: true,
+      autoCrop: false,
       background: true,
       highlight: true,
       rotatable: true,
@@ -233,6 +235,7 @@ export class StoryComponent implements OnInit, AfterViewInit {
         if (this.page.crop != undefined) {
           this.cropper.setCropBoxData(this.page.crop);
         }
+        this.cropper.crop();
       }
     });
   }
@@ -265,6 +268,13 @@ export class StoryComponent implements OnInit, AfterViewInit {
     this.inputElement.nativeElement.focus();
   }
 
+  private filterText(text: string):string {
+    if(text == undefined ){
+      return text;
+    }
+    return text.replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/(\r\n|\n|\r)/gm,"");
+  }
 
 
 }
