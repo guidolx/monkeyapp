@@ -3,7 +3,6 @@ import { NgForm } from '@angular/forms';
 import Cropper from 'cropperjs';
 import { BookService } from '../services/book.service';
 import { Page } from '../model/page';
-import { Book } from '../model/book';
 import { LayoutService } from '../services/layout.service';
 import { DomSanitizer} from '@angular/platform-browser';
 
