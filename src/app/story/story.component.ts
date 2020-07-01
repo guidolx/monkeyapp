@@ -41,8 +41,6 @@ export class StoryComponent implements OnInit, AfterViewInit {
 
   public numCharsLeft: number = 120;
 
-
-
   constructor(private layoutService: LayoutService, private bookService: BookService, private sanitizer:DomSanitizer) { }
 
   ngOnInit() {
@@ -78,7 +76,6 @@ export class StoryComponent implements OnInit, AfterViewInit {
 
   onSaveStoryJson(): void {
     let dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(this.bookService.getBookAsJson());
-    //let name = this.bookService.getBook().title + getFormattedTime();
     let name = this.getFormattedTime();
     let a = document.getElementById('export-file');
     a.setAttribute("href", dataUri);
@@ -145,7 +142,7 @@ export class StoryComponent implements OnInit, AfterViewInit {
     text = this.filterText(text);
       
     if (text != undefined) {
-      this.htmlParagraph = this.layoutService.layoutHtml(text, true, LayoutService.letterTypeDarkCss);
+      this.htmlParagraph = this.layoutService.layoutHtml(text, true, LayoutService.styleDarkMapCss);
 
     } else {
       this.htmlParagraph = '';

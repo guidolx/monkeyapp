@@ -4,8 +4,7 @@ import { Book } from '../model/book';
 import pdfkit from '../../../js/pdfkit.standalone.js';
 import blobStream from '../../../js/blob-stream.js';
 import { Page } from '../model/page';
-import pdfMake from 'pdfmake/build/pdfmake';
-import pdfFonts from 'pdfmake/build/vfs_fonts';
+import { PageLayout } from '../model/pagelayout';
 
 @Injectable({
   providedIn: 'root'
@@ -24,22 +23,31 @@ export class LayoutService {
     for (let fn in fm.map) {
       LayoutService.fontCache[fn] = LayoutService.base64ToArray(fm.map[fn]);
     }
+    window["fonts"] = undefined;
   }
 
-  static letterTypeColorCss = { 'C': 'consonne', 'V': 'voyelle', 'M': 'muette', 'D': 'digramme', ' ': 'ws' };
+  static styleMapCss = { 'C': 'consonne', 'V': 'voyelle', 'M': 'muette', 'D': 'digramme', ' ': 'ws' };
 
-  static letterTypeDarkCss = { 'C': 'consonne-dark', 'V': 'voyelle-dark', 'M': 'muette-dark', 'D': 'digramme-dark', ' ': 'ws-dark' };
+  static styleDarkMapCss = { 'C': 'consonne-dark', 'V': 'voyelle-dark', 'M': 'muette-dark', 'D': 'digramme-dark', ' ': 'ws-dark' };
+
+  static colorMapPdf = {
+    'C': '#1992D4',
+    'V': '#E12D39',
+    'M': '#E6E8EA',
+    'D': '#27AB83',
+    ' ': '#1992D4'
+  };
+
+  static colorDarkMapPdf = {
+    'C': '#262B34',
+    'V': '#262B34',
+    'M': '#9B9B9B',
+    'D': '#27AB83',
+    ' ': '#262B34'
+  };
 
   constructor(private textService: TextService) {
-    pdfMake.vfs = pdfFonts.pdfMake.vfs;
-    pdfMake.fonts = {
-      Nunito: {
-        normal: 'Nunito-Regular.ttf',
-        bold: 'Nunito-Bold.ttf',
-        italics: 'Nunito-Italic.ttf',
-        light: 'Nunito-Light.ttf'
-      }
-    };
+    
   }
 
 
@@ -59,22 +67,20 @@ export class LayoutService {
     let sheets = Math.floor(pages.length / 4) + (remainder > 0 ? 1 : 0);
     let pageNumber = sheets * 4;
     let blankPages = remainder > 0 ? 4 - remainder : 0;
-    
+
     if (blankPages > 0) {
       for (let i = 0; i < blankPages; i++) {
         pages.push({ canvas: undefined, crop: undefined, croppedImage: undefined, image: undefined, num: 0, text: undefined, blankPage: true } as Page);
       }
     }
 
-    const doc = new pdfkit({ size: "A4", layout: "landscape" });
-    this.registerFonts(doc);
+    const doc = this.createDoc('A4', 'landscape', 'Nunito-Bold');
     const stream = doc.pipe(blobStream());
 
-    doc.font('Nunito-Bold', 14);
 
-    let pageA5_left = { t_x: 40, t_y: 130, i_x: 40, i_y: 150 };
+    let pageA5_left:PageLayout = { t_x: 40, t_y: 130, i_x: 40, i_y: 150, m_w: this.MAX_LAYOUT_WIDTH, positionText: true, colorMap: LayoutService.colorDarkMapPdf };
+    let pageA5_right:PageLayout = { t_x: 460, t_y: 130, i_x: 460, i_y: 150, m_w: this.MAX_LAYOUT_WIDTH, positionText: true, colorMap: LayoutService.colorDarkMapPdf };
 
-    let pageA5_right = { t_x: 460, t_y: 130, i_x: 460, i_y: 150 };
     let flip = false;
 
     for (let pageIndex = 0; pageIndex < (pages.length / 2); pageIndex++) {
@@ -91,10 +97,7 @@ export class LayoutService {
       }
     }
     doc.end();
-
-    stream.on('finish', function () {
-      window.open(stream.toBlobURL('application/pdf'));
-    });
+    stream.on('finish', () => { this.openPdf(stream) });
   }
 
   registerFonts(doc: pdfkit) {
@@ -104,15 +107,15 @@ export class LayoutService {
     }
   }
 
-  layoutHtml(text: string, uppercase: boolean, letterType: any) {
+  layoutHtml(text: string, uppercase: boolean, colorMap: any) {
     const textUC = text.toUpperCase();
     let html = '';
     const parsedText = this.textService.parseText(textUC);
     let charIndex = 0;
 
     do {
-      html = html.concat(`<span class='${letterType[parsedText.a.charAt(charIndex)]
-        }'>${uppercase ? textUC.charAt(charIndex) : text.charAt(charIndex)}</span>`);
+      html = html.concat(`<span class='${this.getClassForLetter(parsedText.a.charAt(charIndex),colorMap)
+        }'>${uppercase ? parsedText.c.charAt(charIndex) : parsedText.c.charAt(charIndex)}</span>`);
       ++charIndex;
     } while (charIndex < parsedText.a.length);
     return html;
@@ -124,25 +127,30 @@ export class LayoutService {
       return;
     }
 
-    console.log('starting pdf generation');
+    console.log('creating pdf doc..');
 
-    const dd = this.createCardDocDefinition();
+    const doc = this.createDoc('A4', 'portrait', 'Nunito-Bold');
+    const stream = doc.pipe(blobStream());
+    doc.font('Nunito-Bold',22);
+
+    const pageLayout:PageLayout = { t_x: 0, t_y: 0, i_x: 0, i_y: 0, m_w: 400, positionText: false, colorMap:LayoutService.colorMapPdf };
 
     texts.forEach(item => {
-      dd.content.push(this.layoutParagraphPdf(item));
+      this.layoutText(doc, item.text, pageLayout);
     });
 
-    pdfMake.createPdf(dd).open();
+    doc.end();
+    stream.on('finish', () => { this.openPdf(stream) });
   }
 
-  layoutParagraphPdf(item: { text: string; uc: boolean; html: string; }): { text: Array<{ text: any, style: string }> } {
+  layoutParagraphPdf(item: { text: string; uc: boolean; html: string; }, colorMap:any): { text: Array<{ text: any, style: string }> } {
     const textUC = item.text.toUpperCase();
     const pdfParagraph = { text: Array<{ text: any, style: string }>(), style: 'para' };
     const parsedText = this.textService.parseText(textUC);
     let charIndex = 0;
 
     do {
-      pdfParagraph.text.push({ text: item.uc ? textUC.charAt(charIndex) : item.text.charAt(charIndex), style: this.getLetterClass(parsedText.a.charAt(charIndex)) });
+      pdfParagraph.text.push({ text: item.uc ? parsedText.c.charAt(charIndex) : parsedText.u.charAt(charIndex), style: this.getColorForLetter(parsedText.a.charAt(charIndex),colorMap) });
       ++charIndex;
     } while (charIndex < parsedText.a.length);
 
@@ -150,44 +158,25 @@ export class LayoutService {
   }
 
 
-  private getColorForStyle(style: any) {
-    if (style == undefined) {
+  private getColorForLetter(letter: string, colorMap:any) {
+    if (letter == undefined) {
       return undefined;
     }
-    let c = undefined;
-    switch (style) {
-      case 'digramme':
-        c = "#27AB83";
-        break;
-      case "muette":
-        c = "#9B9B9B"
-        break;
-      case "voyelle":
-      case "consonne":
-      case "ws":
-      default:
+    let c = colorMap[letter];
+    if(c == undefined){
         c = "#262B34";
-        break;
     }
+    console.log(`[${letter}]=${c}`)
     return c;
   }
 
-  getLetterClass(letterType: string): string {
-    let c = '';
-    switch (letterType) {
-      case 'D':
-        c = 'digramme';
-        break;
-      case 'V':
-        c = 'voyelle';
-        break;
-      case 'C':
-        c = 'consonne';
-        break;
-      case 'M':
-        c = 'muette';
-        break;
-      default: c = 'ws';
+  getClassForLetter(letter: string, classMap:any): string {
+    if(letter == undefined){
+      return undefined;
+    }
+    let c = classMap[letter];
+    if(c == undefined){
+      c = 'ws';
     }
     return c;
   }
@@ -254,62 +243,68 @@ export class LayoutService {
   }
 
 
-  
 
-  private layoutPage(doc: pdfkit, page: Page, pagePos: any, pageNumber: number = 1) {
+
+  private layoutPage(doc: pdfkit, page: Page, pageLayout: PageLayout, pageNumber: number = 1) {
     if (page.blankPage) {
       return;
     }
-    let content = undefined;
     if (page.text != undefined) {
-      let ht = doc.heightOfString(page.text.toUpperCase(), { width: this.MAX_LAYOUT_WIDTH, characterSpacing: 1.3 });
-      let wt = doc.widthOfString(page.text.toUpperCase(), { width: this.MAX_LAYOUT_WIDTH, characterSpacing: 1.3 });
-      let lineWrap = Array<number>();
-      if (wt > this.MAX_LAYOUT_WIDTH) {
-        lineWrap = this.getLineWrapPositions(0, page.text.toUpperCase(), doc);
-      }
-      content = this.layoutParagraphPdf({ text: page.text, uc: true, html: '' });
-
-      let i = 0;
-      doc.text('', pagePos.t_x, pagePos.t_y - ht, { continued: true, width: this.MAX_LAYOUT_WIDTH, characterSpacing: 1.3, lineBreak: true });
-      let charIndex = 0;
-      let cont = true;
-      let wrapIndex = lineWrap != undefined && lineWrap.length > 0 ? lineWrap.shift() : undefined;
-      content.text.forEach((elt) => {
-        let c = this.getColorForStyle(elt.style);
-        if (wrapIndex != undefined && wrapIndex == charIndex) {
-          cont = false;
-          wrapIndex = lineWrap != undefined && lineWrap.length > 0 ? lineWrap.shift() : undefined;
-        }
-        doc.fillColor(c).text(elt.text, { continued: cont && ++i < content.text.length });
-        charIndex++;
-        cont = true;
-      });
+      this.layoutText(doc, page.text, pageLayout);
     }
 
     if (page.croppedImage != undefined) {
       let data = page.croppedImage;
       let buffer = LayoutService.base64ToArrayBuffer(data.split(',')[1]);
       let marginX = 0;
-      if(page.canvas && page.canvas.width && page.canvas.width < page.crop.width){
+      if (page.canvas && page.canvas.width && page.canvas.width < page.crop.width) {
         const totMargin = page.crop.width - page.canvas.width;
-        const leftMargin = Math.floor(totMargin/2);
+        const leftMargin = Math.floor(totMargin / 2);
         const centerCropBox = Math.floor((leftMargin - (page.canvas.left - page.crop.left)));
-        marginX = Math.floor((this.MAX_IMAGE_WIDTH/page.crop.width) * centerCropBox);
+        marginX = Math.floor((this.MAX_IMAGE_WIDTH / page.crop.width) * centerCropBox);
       }
-      doc.image(buffer, pagePos.i_x + marginX, pagePos.i_y);
-      
+      doc.image(buffer, pageLayout.i_x + marginX, pageLayout.i_y);
+
     }
-    let ps = pageNumber.toString();
-    let pageNumberWidth = doc.widthOfString(ps);
-    let x = Math.floor(pagePos.t_x + ((this.MAX_LAYOUT_WIDTH + pageNumberWidth) / 2));
-
-    doc.text('', { continued: false });
-    doc.fillColor(this.getColorForStyle('ws')).text(ps, x, 500, { continued: false });
-
-
+    if (pageLayout.positionText) {
+      let ps = pageNumber.toString();
+      let pageNumberWidth = doc.widthOfString(ps);
+      let x = Math.floor(pageLayout.t_x + ((this.MAX_LAYOUT_WIDTH + pageNumberWidth) / 2));
+      doc.text('', { continued: false });
+      doc.fillColor(this.getColorForLetter('ws',pageLayout.colorMap)).text(ps, x, 500, { continued: false });
+    }
   }
-  getLineWrapPositions(index: number, text: string, doc: pdfkit): Array<number> {
+
+  private layoutText(doc: pdfkit, text: string, pageLayout: PageLayout) {
+    let ht = doc.heightOfString(text.toUpperCase(), { width: pageLayout.m_w, characterSpacing: 1.3 });
+    let wt = doc.widthOfString(text.toUpperCase(), { width: pageLayout.m_w, characterSpacing: 1.3 });
+    let lineWrap = Array<number>();
+    if (wt > this.MAX_LAYOUT_WIDTH) {
+      lineWrap = this.getLineWrapPositions(0, text.toUpperCase(), doc);
+    }
+    const content = this.layoutParagraphPdf({ text: text, uc: true, html: '' },pageLayout.colorMap);
+
+    let i = 0;
+
+    if (pageLayout.positionText && pageLayout.positionText == true) {
+      doc.text('', pageLayout.t_x, pageLayout.t_y - ht, { continued: true, width: this.MAX_LAYOUT_WIDTH, characterSpacing: 1.3, lineBreak: true });
+    }
+    let charIndex = 0;
+    let cont = true;
+    let wrapIndex = lineWrap != undefined && lineWrap.length > 0 ? lineWrap.shift() : undefined;
+    content.text.forEach((elt) => {
+      if (wrapIndex != undefined && wrapIndex == charIndex) {
+        cont = false;
+        wrapIndex = lineWrap != undefined && lineWrap.length > 0 ? lineWrap.shift() : undefined;
+      }
+      doc.fillColor(elt.style).text(elt.text, { continued: cont && ++i < content.text.length });
+      charIndex++;
+      cont = true;
+    });
+    return content;
+  }
+
+  private getLineWrapPositions(index: number, text: string, doc: pdfkit): Array<number> {
     let i = index;
     let whiteSpace = [];
     let lineWrapPositions = [];
@@ -339,7 +334,16 @@ export class LayoutService {
 
   }
 
+  private createDoc(pageSize: string = 'A4', layout: string = 'portrait', font: string = 'Nunito-Regular'): pdfkit {
+    const doc = new pdfkit({ size: pageSize, layout: layout });
+    this.registerFonts(doc);
+    const stream = doc.pipe(blobStream());
+    doc.font(font, 14);
+    return doc;
+  }
 
-
+  private openPdf(stream: any) {
+    window.open(stream.toBlobURL('application/pdf'));
+  }
 
 }

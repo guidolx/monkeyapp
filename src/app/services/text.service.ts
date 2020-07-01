@@ -32,38 +32,59 @@ export class TextService {
     return a;
   }
 
-  parseText(txt: string): { o: string, u: string, a: string } {
-    const result: { o: string, u: string, a: string } = { o: txt, u: txt.toUpperCase(), a: '' };
+  parseText(txt: string): { o: string, c:string, u: string, a: string } {
+    const result: { o: string, c: string,  u: string, a: string } = { o: txt, c: txt.replace(/_/g,''), u: txt.toUpperCase().replace(/_/g,''), a: '' };
 
     const classes = { dig: '', norm: '', muet: '' };
 
     let charIndex = 0;
     let currentChar = 'a';
     let nextChar = 'b';
+    let pt = txt.toUpperCase();
+    let skipMuette = false, forceMuette = false;
     // iterating over string
     do {
-      currentChar = result.u.charAt(charIndex);
-      nextChar = charIndex + 1 < result.u.length ? result.u.charAt(charIndex + 1).trim() : '';
-
-      if (nextChar != '' && TextService.digrammes.indexOf(currentChar + nextChar) > -1) {
+      currentChar = pt.charAt(charIndex);
+      nextChar = charIndex + 1 < pt.length ? pt.charAt(charIndex + 1).trim() : '';
+      // double underscore - force muette
+      if(currentChar == '_' && nextChar == '_'){
+        forceMuette = true;
+        charIndex +=1;
+        console.log("Found forcemuette token");
+      // single underscore - skip muette
+      }else if(currentChar == '_' ){
+        skipMuette = true;
+        console.log("Found skipmuette token");
+      }
+      else if (nextChar != '' && TextService.digrammes.indexOf(currentChar + nextChar) > -1) {
         result.a = result.a + "DD";
         charIndex += 1;
       } else if (
         ((nextChar != "'" && nextChar == nextChar.toLowerCase())
           || nextChar == '') && TextService.muettes.indexOf(currentChar) > -1) {
-        result.a = result.a + "M";
+        if(skipMuette){
+          result.a = result.a + "C";
+        }else{
+          result.a = result.a + "M";
+        }
+        skipMuette = false;
 
       } else if (TextService.voyelles.indexOf(currentChar) > -1) {
         result.a = result.a + "V";
       } else if (/\s/.test(currentChar) == false && (currentChar != currentChar.toLowerCase())) {
-        result.a = result.a + 'C';
+        if( forceMuette ){
+          result.a = result.a + 'M';
+        }else{
+          result.a = result.a + 'C';
+        }
+        forceMuette = false;
       } else if(TextService.whitespace.indexOf(currentChar) > -1){
         result.a = result.a + 'W';
       }else{
         result.a = result.a + ' ';
       }
       charIndex++;
-    } while (charIndex < result.u.length);
+    } while (charIndex < pt.length);
     return result;
   }  
 
